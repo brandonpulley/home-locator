@@ -85,7 +85,6 @@ def add_time_for_location(start_st: str, end_st: str):
                                          LATE_HOUR_BOUND)
 
     while current_time < end_time_dt:
-        print('current_time:: ', current_time)
         current_time, time_total_seconds = _daily_bounds_check(
             current_time,
             end_time_dt,
