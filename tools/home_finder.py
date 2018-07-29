@@ -13,7 +13,7 @@ LATITUDE = 'lat'
 LONGITUDE = 'lon'
 
 TOTAL_TIME = 'total_time'
-
+TOTAL_SECONDS_INBOUNDS = "total_seconds_inbounds"
 
 def get_home_location(visits: []):
     my_locations = {}
@@ -21,32 +21,51 @@ def get_home_location(visits: []):
     current_top = None
 
     for visit in visits:
+        _latitude = visit.get(LATITUDE)
+        _longitude = visit.get(LONGITUDE)
         # normalizing lat/lon to easily find when the same location is visited
-        key = _normalize_location(visit.get(LATITUDE), visit.get(LONGITUDE))
+        key = _normalize_location(_latitude, _longitude)
 
         if key in my_locations:
             # back at the same location!
-            this_locations_current_total_time = my_locations[key]
+            this_locations_current_total_secs = \
+                my_locations[key].get(TOTAL_SECONDS_INBOUNDS)
         else:
             # default starting value - 0 seconds total time
-            this_locations_current_total_time = 0
+            this_locations_current_total_secs = 0
 
         # add this visit's total number of seconds
-        this_locations_current_total_time += add_time_for_location(
+        this_locations_current_total_secs += add_time_for_location(
             visit.get(ARRIVAL_TIME),
             visit.get(DEPARTURE_TIME)
         )
 
-        my_locations[key] = this_locations_current_total_time
+        this_location_data = {
+            TOTAL_SECONDS_INBOUNDS: this_locations_current_total_secs,
+            "lat": _latitude,
+            "lon": _longitude
+        }
+
+        # key to num_seconds
+        my_locations[key] = this_location_data
         keep_current_top = current_top and \
-                           (my_locations[current_top] >
-                            this_locations_current_total_time)
+                       (my_locations[current_top].get(TOTAL_SECONDS_INBOUNDS) >
+                        this_locations_current_total_secs)
         if not keep_current_top:
             current_top = key
 
-    # TODO: Calculate current top stuff
-
-    return my_locations
+    if my_locations[current_top].get(TOTAL_SECONDS_INBOUNDS) > MINIMUM_SECONDS:
+        return {"success": my_locations[current_top]}
+    else:
+        return {"failure":
+            {
+                "data": my_locations[current_top],
+                "reason": "top location logged less than 30 hours",
+                "total_hours":
+                    (my_locations[current_top].
+                     get(TOTAL_SECONDS_INBOUNDS)/60/60)
+            }
+        }
 
 
 def _normalize_location(lat: float, lon: float):
@@ -154,7 +173,3 @@ def _daily_bounds_check(current_time, end_time_dt, time_total_seconds):
 
     return current_time, time_total_seconds
 
-
-def is_visit_long_enough(total_time_at_location):
-
-    return total_time_at_location.total_seconds() > MINIMUM_SECONDS
