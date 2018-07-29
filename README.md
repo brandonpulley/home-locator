@@ -1,6 +1,7 @@
 ## Dependencies
 
 [Docker](https://www.docker.com/get-docker)
+
 [docker-compose](https://docs.docker.com/compose/install/)
 
 ## Run the server
