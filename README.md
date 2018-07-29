@@ -40,3 +40,29 @@ body
   ]
 }
 ```
+
+If a home successfully is found the response will be in the following format
+```
+{
+    "success": {
+        "lat": 45.12355,
+        "lon": -118.12345,
+        "total_seconds_inbounds": 136800
+    }
+}
+```
+
+If there is no home object found the error will be in the following format
+```
+{
+    "failure": {
+        "data": {
+            "lat": 45.12355,
+            "lon": -118.12345,
+            "total_seconds_inbounds": 93600
+        },
+        "reason": "top location logged less than 30 hours",
+        "total_hours": 26
+    }
+}
+```

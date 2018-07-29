@@ -42,8 +42,8 @@ def get_home_location(visits: []):
 
         this_location_data = {
             TOTAL_SECONDS_INBOUNDS: this_locations_current_total_secs,
-            "lat": _latitude,
-            "lon": _longitude
+            LATITUDE: _latitude,
+            LONGITUDE: _longitude
         }
 
         # key to num_seconds
