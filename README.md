@@ -56,7 +56,7 @@ If there is no home object found the error will be in the following format
 ```
 {
     "failure": {
-        "data": {
+        "top_result": {
             "lat": 45.12355,
             "lon": -118.12345,
             "total_seconds_inbounds": 93600

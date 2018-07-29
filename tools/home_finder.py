@@ -59,7 +59,7 @@ def get_home_location(visits: []):
     else:
         return {"failure":
             {
-                "data": my_locations[current_top],
+                "top_result": my_locations[current_top],
                 "reason": "top location logged less than 30 hours",
                 "total_hours":
                     (my_locations[current_top].
