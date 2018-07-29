@@ -39,8 +39,8 @@ def get_home_location(visits: []):
 
         my_locations[key] = this_locations_current_total_time
         keep_current_top = current_top and \
-                           my_locations[current_top] > \
-                           this_locations_current_total_time
+                           (my_locations[current_top] >
+                            this_locations_current_total_time)
         if not keep_current_top:
             current_top = key
 
@@ -73,7 +73,8 @@ def add_time_for_location(start_st: str, end_st: str):
     if start_time_dt.hour < EARLY_HOUR_BOUND or \
             start_time_dt.hour > LATE_HOUR_BOUND:
         current_time = start_time_dt
-    elif end_time_dt.day == start_time_dt.day and end_time_dt.hour < LATE_HOUR_BOUND:
+    elif end_time_dt.day == start_time_dt.day and \
+            end_time_dt.hour < LATE_HOUR_BOUND:
         # same day, both start and end out of bounds. Add no time
         return 0
     else:
@@ -94,30 +95,33 @@ def add_time_for_location(start_st: str, end_st: str):
     return time_total_seconds
 
 
-def _get_next_datetime(current_time, day_offset, hour):
-    current_time = current_time + datetime.timedelta(days=day_offset)
+def _get_datetime_with_offset(reference_time, day_offset, hour):
+    reference_time = reference_time + datetime.timedelta(days=day_offset)
     return datetime.datetime(
-        current_time.year,
-        current_time.month,
-        current_time.day,
+        reference_time.year,
+        reference_time.month,
+        reference_time.day,
         hour
     )
 
 
 def _daily_bounds_check(current_time, end_time_dt, time_total_seconds):
 
+    is_end_time_after_today = current_time.day < end_time_dt.day or \
+                              current_time.month < end_time_dt.month or \
+                              current_time.year < end_time_dt.year
+
     # check: start_time after 8 PM and end_time after 8 AM next day
     if current_time.hour >= LATE_HOUR_BOUND and \
-            end_time_dt.day > current_time.day \
+            is_end_time_after_today \
             and end_time_dt.hour > EARLY_HOUR_BOUND:
-
-        tomorrow_morning_bounds = _get_next_datetime(
+        tomorrow_morning_bounds = _get_datetime_with_offset(
             current_time, 1, EARLY_HOUR_BOUND)
         time_total_seconds += (tomorrow_morning_bounds -
                                current_time).total_seconds()
 
         # add 12 hours, update current_time, and continue
-        current_time = _get_next_datetime(current_time, 1, LATE_HOUR_BOUND)
+        current_time = _get_datetime_with_offset(current_time, 1, LATE_HOUR_BOUND)
 
     # check: start_time after 8 PM and end_time before 8 AM next day
     elif current_time.hour >= LATE_HOUR_BOUND and \
@@ -126,26 +130,28 @@ def _daily_bounds_check(current_time, end_time_dt, time_total_seconds):
              or end_time_dt.day == current_time.day):
 
         time_total_seconds += (end_time_dt - current_time).total_seconds()
-        current_time = _get_next_datetime(current_time, 1, LATE_HOUR_BOUND)
+        current_time = _get_datetime_with_offset(current_time, 1, LATE_HOUR_BOUND)
 
     # check: start_time before 8 AM and end_time after 8 AM today day
     elif current_time.hour < EARLY_HOUR_BOUND and \
-            (end_time_dt.day > current_time.day
+            (is_end_time_after_today
              or end_time_dt.hour > EARLY_HOUR_BOUND):
-        this_morning_bounds = _get_next_datetime(current_time, 0, EARLY_HOUR_BOUND)
+
+        this_morning_bounds = _get_datetime_with_offset(current_time, 0, EARLY_HOUR_BOUND)
         time_total_seconds += (this_morning_bounds -
                                current_time).total_seconds()
 
-        current_time = _get_next_datetime(current_time, 0, LATE_HOUR_BOUND)
+        current_time = _get_datetime_with_offset(current_time, 0, LATE_HOUR_BOUND)
 
     # check: start before 8 AM and end before 8 AM same day
     elif current_time.hour < EARLY_HOUR_BOUND \
             and end_time_dt.day == current_time.day \
             and end_time_dt.hour < EARLY_HOUR_BOUND:
+
         time_total_seconds += (end_time_dt -
                                current_time).total_seconds()
 
-        current_time = _get_next_datetime(current_time, 0, LATE_HOUR_BOUND)
+        current_time = _get_datetime_with_offset(current_time, 0, LATE_HOUR_BOUND)
 
     return current_time, time_total_seconds
 
