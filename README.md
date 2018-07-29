@@ -66,3 +66,9 @@ If there is no home object found the error will be in the following format
     }
 }
 ```
+
+## Tests
+To run unit tests run the following command
+```
+docker-compose run web pytest
+```
